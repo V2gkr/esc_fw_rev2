@@ -45,13 +45,13 @@ const uart_element_struct * const MotorSettingsGroup[]={&MotorSetDirection,&Moto
 const uart_element_struct * const MotorDataGroup[]={&MotorTriggerActDiagnostics,&MotorGetRotationSpeed,&MotorGetCurrent};
 
 void UartCommInit(void){
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2,UartCommBuf,30);
+  HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1,UartCommBuf,30);
 }
 
 void UartCommCallback(uint8_t size){
   RxBufPointer=size;
   RxState=BUSY;
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2,UartCommBuf,30);
+  HAL_UARTEx_ReceiveToIdle_DMA(&hlpuart1,UartCommBuf,30);
 }
 
 void UartCommService(void){
@@ -125,7 +125,7 @@ void UartCommService(void){
 			break;
 		}
 		pTxFrame->crc=CalculateCRC(UartTxBuf);
-		HAL_UART_Transmit_DMA(&huart2,UartTxBuf, sizeof(UartTxBuf));
+		HAL_UART_Transmit_DMA(&hlpuart1,UartTxBuf, sizeof(UartTxBuf));
 		//pFrame->payload[0]=*requestedRegGroup[pFrame->addr_high]->val;
 		break;
 	case type_trigger:

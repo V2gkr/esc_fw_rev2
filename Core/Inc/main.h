@@ -36,7 +36,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef hlpuart1;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -59,6 +59,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LED_GREEN_Pin GPIO_PIN_14
+#define LED_GREEN_GPIO_Port GPIOC
+#define LED_RED_Pin GPIO_PIN_15
+#define LED_RED_GPIO_Port GPIOC
+#define TEMP_Pin GPIO_PIN_2
+#define TEMP_GPIO_Port GPIOA
+#define VBUS_Pin GPIO_PIN_4
+#define VBUS_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
