@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <math.h>
+#include "DRV8320S.h"
 #include "MotorControl.h"
 #include "MotorConfig.h"
 #include <stdio.h>
@@ -185,6 +186,7 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   UartCommInit();
+  DRV8320S_Init();
   MotorControlInit();
   HAL_Delay(2000);
   //get starting point hall state to not create 3 phase short circuit

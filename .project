@@ -29,4 +29,16 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>BSP_stm32g4_cmsis</name>
+			<type>2</type>
+			<location>C:/Users/vhrysenk/Documents/Projects/IAR/test_ctrl/esc_fw_rev2/esc_fw_rev2/Drivers/DRV8320S_driver/BSP_stm32g4_cmsis</location>
+		</link>
+		<link>
+			<name>DRV8320S_driver</name>
+			<type>2</type>
+			<location>C:/Users/vhrysenk/Documents/Projects/IAR/test_ctrl/esc_fw_rev2/esc_fw_rev2/Drivers/DRV8320S_driver</location>
+		</link>
+	</linkedResources>
 </projectDescription>
