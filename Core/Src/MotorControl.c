@@ -84,8 +84,8 @@ void MotorControlInit(void){
   HAL_OPAMP_Start(&hopamp2);
   HAL_OPAMP_Start(&hopamp3);
   //3 phase measurement start and shit
-  HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
+  //HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
+  //HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
 }
 
 void MotorUpdateTimePulse(uint16_t pulse){
