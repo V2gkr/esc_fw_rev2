@@ -50,6 +50,7 @@ MotorControlParameterStruct MotorControlParameters={0};
 #define STEP6_CCMR1   0x0848
 #define STEP6_CCMR2   0x6868
 
+#define LOW_SPEED_MEASUREMENT_LIMIT 13333
 
 uint8_t soft_start_counter=0;
 volatile uint8_t soft_start_update_event=0;
@@ -84,8 +85,8 @@ void MotorControlInit(void){
   HAL_OPAMP_Start(&hopamp2);
   HAL_OPAMP_Start(&hopamp3);
   //3 phase measurement start and shit
-  //HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
-  //HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
+  HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
+  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
 }
 
 void MotorUpdateTimePulse(uint16_t pulse){
@@ -192,9 +193,12 @@ float MotorCalculateNewRPM(uint16_t new_value){
 //calculates rotation in rpm
 void MotorCalculateRotationSpeed(uint32_t time){
   /* time is ccr1 register which is in a units of prescaler*/
-  float ftime=(float)time/HALL_CLOCK;
-  MotorControlParameters.RPM_measured=(float)(60/(MOTOR_POLE_PAIR*ftime))/1000;
-
+  if(time>LOW_SPEED_MEASUREMENT_LIMIT)
+    MotorControlParameters.RPM_measured=0;
+  else{
+    float ftime=(float)time/(HALL_CLOCK/(HALL_PRESCALER+1));
+    MotorControlParameters.RPM_measured=(float)(60/(MOTOR_POLE_PAIR*ftime));
+  }
 }
 
 void MotorGetActualHallState(void){

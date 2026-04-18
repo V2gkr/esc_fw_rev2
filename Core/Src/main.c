@@ -94,14 +94,17 @@ static void MX_SPI3_Init(void);
 /* USER CODE BEGIN 0 */
 float moving_average_speed_sum=0;
 uint16_t mov_average_count=0;
+float mov_average_val=0;
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
   UartCommCallback(Size);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
   if(htim->Instance == TIM6){
-    if(mov_average_count)
+    if(mov_average_count){
       MotorControlParameters.RPM_measured=moving_average_speed_sum/mov_average_count;
+      mov_average_val=MotorControlParameters.RPM_measured;
+    }
     mov_average_count=0;
     moving_average_speed_sum=0;
     SpeedReg.output=PI_regulator(&SpeedReg,MotorControlParameters.RPM_reference);
@@ -186,7 +189,7 @@ int main(void)
   MX_TIM6_Init();
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
-  SCB->VTOR=0x8000000;
+
   UartCommInit();
   DRV8320_SetEnable();
   /* for initialization only */
@@ -200,6 +203,7 @@ int main(void)
   MotorCalculateNewHallState();
   MotorLoadNewStep();
   PI_regulators_Init(&MotorControlParameters.RPM_measured,&MotorControlParameters.Current_Measured);
+  HAL_TIM_Base_Start_IT(&htim6);
   //MotorTurnOn();
 
   //MotorTurnOn();
