@@ -67,6 +67,10 @@ void Error_Handler(void);
 #define TEMP_GPIO_Port GPIOA
 #define VBUS_Pin GPIO_PIN_4
 #define VBUS_GPIO_Port GPIOA
+#define CS_Pin GPIO_PIN_15
+#define CS_GPIO_Port GPIOA
+#define ENABLE_Pin GPIO_PIN_9
+#define ENABLE_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
