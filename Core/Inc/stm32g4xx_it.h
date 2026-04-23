@@ -62,8 +62,8 @@ void DMA1_Channel4_IRQHandler(void);
 void TIM1_BRK_TIM15_IRQHandler(void);
 void TIM1_CC_IRQHandler(void);
 void TIM4_IRQHandler(void);
+void USART3_IRQHandler(void);
 void TIM6_DAC_IRQHandler(void);
-void LPUART1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
