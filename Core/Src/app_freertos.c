@@ -138,6 +138,7 @@ void MX_FREERTOS_Init(void) {
 void StartMotorCtrlTask(void *argument)
 {
   /* USER CODE BEGIN StartMotorCtrlTask */
+  (void)argument;
   /* Infinite loop */
   for(;;)
   {
@@ -157,6 +158,7 @@ void StartMotorCtrlTask(void *argument)
 void StartCommTask(void *argument)
 {
   /* USER CODE BEGIN StartCommTask */
+  (void)argument;
   /* Infinite loop */
   for(;;)
   {
