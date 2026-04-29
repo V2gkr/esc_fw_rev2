@@ -81,6 +81,9 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
+						<entry excluding="CMSIS_RTOS_V2|portable/GCC/ARM_CM4F" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Middlewares/Third_Party/FreeRTOS/Source"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
