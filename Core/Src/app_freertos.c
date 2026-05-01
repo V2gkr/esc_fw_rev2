@@ -164,6 +164,7 @@ void StartCommTask(void *argument)
   {
     UartCommService();
     VbusService();
+    NTC_Service();
     osDelay(50);
   }
   /* USER CODE END StartCommTask */

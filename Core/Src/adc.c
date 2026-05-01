@@ -19,8 +19,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "adc.h"
+#include <stdint.h>
 
 /* USER CODE BEGIN 0 */
+esc_data_struct esc_data;
 #define VBUS_R1 300
 #define VBUS_R2 15
 #define REF     3.3
@@ -49,7 +51,7 @@ float ntc_get_resistance(uint16_t adc)
 {
     if (adc == 0) return 1e9; // защита (обрыв)
 
-    return R_FIXED * ((REF / adc) - 1.0f);
+    return R_FIXED * (float)((float)((float)ADC_RESOLUTION / (float)adc) - 1.0f);
 }
 
 
@@ -64,7 +66,7 @@ float ntc_get_temperature(float R)
         return temp_table[TABLE_SIZE - 1];
 
     // поиск диапазона
-    for (int i = 0; i < TABLE_SIZE - 1; i++)
+    for (uint8_t i = 0; i < TABLE_SIZE - 1; i++)
     {
         if (R <= resistance[i] && R >= resistance[i + 1])
         {
@@ -83,12 +85,13 @@ float ntc_get_temperature(float R)
 
     return -999.0f; // ошибка
 }
-float TempCelsius=0;
+
+
 void NTC_Service(void)
 {
     float R = ntc_get_resistance(HAL_ADC_GetValue(&hadc1));
     HAL_ADC_Start(&hadc1);
-    TempCelsius=ntc_get_temperature(R);
+    esc_data.temperature=ntc_get_temperature(R/1000);//table from datasheet is in kOhm , i calculate in Ohm
 }
 
 
@@ -101,7 +104,7 @@ void VbusService(void){
   VBUS_measurement_samples=HAL_ADC_GetValue(&hadc2);
   HAL_ADC_Start(&hadc2);
   voltage_pre_div=(float)((VBUS_measurement_samples*REF)/ADC_RESOLUTION);
-  VBUS_measurement_volt=(float)(voltage_pre_div/(float)((float)VBUS_R2/(float)(VBUS_R1+VBUS_R2)));
+  esc_data.vbus_volt=(float)(voltage_pre_div/(float)((float)VBUS_R2/(float)(VBUS_R1+VBUS_R2)));
 }
 /* USER CODE END 0 */
 

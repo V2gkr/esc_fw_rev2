@@ -199,11 +199,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if(HAL_GetTick()-Ticks>=1000){
-      Ticks=HAL_GetTick();
-      HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-      //HAL_UART_Transmit_DMA(&hlpuart1, "suka", 4);
-    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

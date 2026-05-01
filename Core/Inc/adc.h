@@ -37,7 +37,10 @@ extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 
 /* USER CODE BEGIN Private defines */
-
+typedef struct{
+  float temperature;
+  float vbus_volt;
+}esc_data_struct;
 /* USER CODE END Private defines */
 
 void MX_ADC1_Init(void);
@@ -45,6 +48,8 @@ void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void VbusService(void);
+
+void NTC_Service(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

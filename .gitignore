@@ -3,3 +3,5 @@ Drivers/
 .settings/
 *.launch
 Middlewares/
+*.clangd
+*.cmake
