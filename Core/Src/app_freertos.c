@@ -28,6 +28,7 @@
 #include "MotorControl.h"
 #include "UartComm.h"
 #include "adc.h"
+#include "diagnostics.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -149,6 +150,7 @@ void StartMotorCtrlTask(void *argument)
 }
 
 /* USER CODE BEGIN Header_StartCommTask */
+uint16_t adc_Data;
 /**
 * @brief Function implementing the CommTask thread.
 * @param argument: Not used
@@ -159,12 +161,24 @@ void StartCommTask(void *argument)
 {
   /* USER CODE BEGIN StartCommTask */
   (void)argument;
+  uint8_t green_led_counter;
   /* Infinite loop */
   for(;;)
   {
     UartCommService();
-    VbusService();
-    NTC_Service();
+    //VbusService();
+    //NTC_Service();
+    if(!CheckAlarms()){
+      green_led_counter++;
+      if(green_led_counter==20) {
+        green_led_counter=0;
+        //adc_Data=HAL_ADC_GetValue(&hadc2);
+        HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+        //HAL_ADC_Start(&hadc2);
+
+      }
+        
+    }
     osDelay(50);
   }
   /* USER CODE END StartCommTask */

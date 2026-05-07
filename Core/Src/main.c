@@ -122,6 +122,8 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
   }
 }
 uint32_t Ticks=0;
+
+uint16_t test_Val;
 /* USER CODE END 0 */
 
 /**
@@ -161,10 +163,10 @@ int main(void)
   MX_ADC1_Init();
   MX_OPAMP1_Init();
   MX_OPAMP2_Init();
-  MX_OPAMP3_Init();
   MX_TIM6_Init();
   MX_SPI3_Init();
   MX_USART3_UART_Init();
+  MX_OPAMP3_Init();
   /* USER CODE BEGIN 2 */
 
   UartCommInit();
@@ -174,7 +176,9 @@ int main(void)
   HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
   DRV8320S_Init();
   MotorControlInit();
+  HAL_ADC_Start(&hadc2);
   HAL_Delay(2000);
+  uint16_t testval=HAL_ADC_GetValue(&hadc2);
   //get starting point hall state to not create 3 phase short circuit
   MotorGetActualHallState();
   MotorCalculateNewHallState();
@@ -182,6 +186,9 @@ int main(void)
   PI_regulators_Init(&MotorControlParameters.RPM_measured,&MotorControlParameters.Current_Measured);
   HAL_TIM_Base_Start_IT(&htim6);
   MotorUpdateTimePulse(300);
+
+
+  MotorTurnOn();
   /* USER CODE END 2 */
 
   /* Init scheduler */

@@ -61,7 +61,7 @@ void UartCommService(void){
 	MemDivider mem_divider;
 	if(RxState!=BUSY)
 		return;
-	RxState=IDLE;
+ 	RxState=IDLE;
 	if(CalculateCRC(UartCommBuf)!=pFrame->crc)
 		return;
 	if(pFrame->sof!=SOF_BYTE)

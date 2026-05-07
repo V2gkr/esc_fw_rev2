@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+#define MOTOR_SPEED_LIMIT_ALARM     0x01
+#define MOTOR_CURRENT_LIMIT_ALARM   0x02
+#define MOTOR_SPEED_REG_SAT_ALARM   0x04
+#define MOTOR_CURR_REG_SAT_ALARM    0x08
+
+
 typedef enum{
   MOTOR_NOT_ACTIVE=0,
   MOTOR_SOFT_START=1,
@@ -23,6 +29,7 @@ typedef struct{
   int16_t ElectricalAngle;
   uint8_t Step;
   uint8_t StepEvent;
+  uint16_t alarms;
   MotorStates actualMotorState;
 }MotorControlParameterStruct;
 extern MotorControlParameterStruct MotorControlParameters;

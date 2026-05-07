@@ -1,7 +1,9 @@
 #include "main.h"
 //#include "DRV8320S.h"
+#include "board_common.h"
 #include "MotorControl.h"
 #include "MotorConfig.h"
+#include "stm32g4xx_hal_adc_ex.h"
 volatile uint8_t bldc_count=0;
 
 float speed_log[1024];
@@ -15,10 +17,13 @@ extern OPAMP_HandleTypeDef hopamp3;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 
+uint16_t opamp1_data;
+uint16_t opamp2_data;
+uint16_t opamp3_data;
 MotorControlParameterStruct MotorControlParameters={0};
-#define CURRENT_SENSE_CIRCUIT_EQ_RESISTANCE (float)583.33
-#define ADC_VOLTAGE_REFERENCE               (float)3.3
-#define ADC_MAX_VALUE                       4095
+// #define CURRENT_SENSE_CIRCUIT_EQ_RESISTANCE (float)583.33
+#define CURRENT_SENSE_CIRCUIT_EQ_RESISTANCE (float)175
+
 #define ADC_ZERO_CURRENT_VALUE_1            1424
 #define ADC_ZERO_CURRENT_VALUE_2            1424
 #define ADC_ZERO_CURRENT_VALUE_3            1436
@@ -54,6 +59,7 @@ MotorControlParameterStruct MotorControlParameters={0};
 
 uint8_t soft_start_counter=0;
 volatile uint8_t soft_start_update_event=0;
+
 uint16_t CurrentShuntRawData[3];
 
 typedef enum{
@@ -69,15 +75,15 @@ typedef enum{
 
 void MotorControlInit(void){
   MotorControlParameters.RPM_reference=MotorCalculateNewRPM(SIX_STEP_FREQ);
-  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_DIFFERENTIAL_ENDED);
+  HAL_ADCEx_Calibration_Start(&hadc2, ADC_DIFFERENTIAL_ENDED);
   HAL_TIMEx_HallSensor_Start_IT(&htim4);
-  OPAMP1->CSR&=~OPAMP_CSR_PGGAIN;
-  OPAMP1->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
-  OPAMP2->CSR&=~OPAMP_CSR_PGGAIN;
-  OPAMP2->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
-  OPAMP3->CSR&=~OPAMP_CSR_PGGAIN;
-  OPAMP3->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
+  // OPAMP1->CSR&=~OPAMP_CSR_PGGAIN;
+  // OPAMP1->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
+  // OPAMP2->CSR&=~OPAMP_CSR_PGGAIN;
+  // OPAMP2->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
+  // OPAMP3->CSR&=~OPAMP_CSR_PGGAIN;
+  // OPAMP3->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
   HAL_OPAMP_SelfCalibrate(&hopamp1);
   HAL_OPAMP_SelfCalibrate(&hopamp2);
   HAL_OPAMP_SelfCalibrate(&hopamp3);
@@ -85,8 +91,10 @@ void MotorControlInit(void){
   HAL_OPAMP_Start(&hopamp2);
   HAL_OPAMP_Start(&hopamp3);
   //3 phase measurement start and shit
-  //HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
-  //HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
+  // HAL_ADCEx_InjectedStart(&hadc1);
+  // HAL_ADCEx_InjectedStart(&hadc2);
+  HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
+  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
 }
 
 void MotorUpdateTimePulse(uint16_t pulse){
@@ -220,7 +228,9 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
     //case 2:
       /* step 2 - phase 3 off , phase 2 force inactive , phase 1 pwm
        * phase 1 vm phase 2 gnd - read current phase 2*/
-      adc_current_readings=CurrentShuntRawData[1]-ADC_ZERO_CURRENT_VALUE_2;
+      opamp1_data=HAL_ADCEx_InjectedGetValue(&hadc1, ADC_INJECTED_RANK_1);
+      adc_current_readings=opamp1_data-ADC_ZERO_CURRENT_VALUE_2;
+      //adc_current_readings=CurrentShuntRawData[1]-ADC_ZERO_CURRENT_VALUE_2;
       break;
     case 3:
     case 4:
@@ -231,7 +241,9 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
     //case 4:
       /* step 4 - phase 3 force inactive , phase 2 pwm , phase 1 off
        * phase 2 vm , phase 3 gnd - read current phase 3*/
-      adc_current_readings=CurrentShuntRawData[2]-ADC_ZERO_CURRENT_VALUE_3;
+      // adc_current_readings=CurrentShuntRawData[2]-ADC_ZERO_CURRENT_VALUE_3;
+      opamp3_data=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
+      adc_current_readings=opamp3_data-ADC_ZERO_CURRENT_VALUE_3;
       break;
     case 5:
     case 6:
@@ -242,7 +254,9 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
 //    case 6:
       /* step 6 - phase 3 pwm , phase 2 off , phase 1 force inactive
        * phase 3 vm phase 1 gnd - read current phase 1*/
-      adc_current_readings=CurrentShuntRawData[0]-ADC_ZERO_CURRENT_VALUE_1;
+      //adc_current_readings=CurrentShuntRawData[0]-ADC_ZERO_CURRENT_VALUE_1;
+      opamp2_data=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
+      adc_current_readings=opamp2_data-ADC_ZERO_CURRENT_VALUE_1;
       break;
     default:
       adc_current_readings=0;

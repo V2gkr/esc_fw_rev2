@@ -49,6 +49,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Core/Src/MotorControl.c
     ${CMAKE_SOURCE_DIR}/Core/Src/UartComm.c
     ${CMAKE_SOURCE_DIR}/Core/Src/PI_regulator.c
+    ${CMAKE_SOURCE_DIR}/Core/Src/diagnostics.c
     ${CMAKE_SOURCE_DIR}/Drivers/DRV8320S_driver/DRV8320S.c #eto rabotalo
     ${CMAKE_SOURCE_DIR}/Drivers/DRV8320S_driver/BSP_stm32g4_cmsis/BSP_DRV8320.c
 )
