@@ -166,8 +166,8 @@ void StartCommTask(void *argument)
   for(;;)
   {
     UartCommService();
-    //VbusService();
-    //NTC_Service();
+    VbusService();
+    NTC_Service();
     if(!CheckAlarms()){
       green_led_counter++;
       if(green_led_counter==20) {

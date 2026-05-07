@@ -91,10 +91,10 @@ void MotorControlInit(void){
   HAL_OPAMP_Start(&hopamp2);
   HAL_OPAMP_Start(&hopamp3);
   //3 phase measurement start and shit
-  // HAL_ADCEx_InjectedStart(&hadc1);
-  // HAL_ADCEx_InjectedStart(&hadc2);
-  HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
+  HAL_ADCEx_InjectedStart(&hadc1);
+  HAL_ADCEx_InjectedStart(&hadc2);
+  // HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
+  // HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
 }
 
 void MotorUpdateTimePulse(uint16_t pulse){
@@ -229,7 +229,7 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
       /* step 2 - phase 3 off , phase 2 force inactive , phase 1 pwm
        * phase 1 vm phase 2 gnd - read current phase 2*/
       opamp1_data=HAL_ADCEx_InjectedGetValue(&hadc1, ADC_INJECTED_RANK_1);
-      adc_current_readings=opamp1_data-ADC_ZERO_CURRENT_VALUE_2;
+      adc_current_readings=opamp1_data-1200;
       //adc_current_readings=CurrentShuntRawData[1]-ADC_ZERO_CURRENT_VALUE_2;
       break;
     case 3:
@@ -242,8 +242,8 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
       /* step 4 - phase 3 force inactive , phase 2 pwm , phase 1 off
        * phase 2 vm , phase 3 gnd - read current phase 3*/
       // adc_current_readings=CurrentShuntRawData[2]-ADC_ZERO_CURRENT_VALUE_3;
-      opamp3_data=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
-      adc_current_readings=opamp3_data-ADC_ZERO_CURRENT_VALUE_3;
+      opamp3_data=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_2);
+      adc_current_readings=opamp3_data-1200;
       break;
     case 5:
     case 6:
@@ -256,7 +256,7 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
        * phase 3 vm phase 1 gnd - read current phase 1*/
       //adc_current_readings=CurrentShuntRawData[0]-ADC_ZERO_CURRENT_VALUE_1;
       opamp2_data=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
-      adc_current_readings=opamp2_data-ADC_ZERO_CURRENT_VALUE_1;
+      adc_current_readings=opamp2_data-1200;
       break;
     default:
       adc_current_readings=0;
