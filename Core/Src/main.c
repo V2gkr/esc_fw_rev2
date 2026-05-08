@@ -187,8 +187,6 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
   MotorUpdateTimePulse(300);
 
-
-  MotorTurnOn();
   /* USER CODE END 2 */
 
   /* Init scheduler */
