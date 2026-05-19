@@ -122,8 +122,16 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
   }
 }
 uint32_t Ticks=0;
-
-uint16_t test_Val;
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t RxData[2];
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs){
+	if((RxFifo0ITs&FDCAN_IT_RX_FIFO0_NEW_MESSAGE)!=RESET){
+		
+		HAL_FDCAN_GetRxMessage(hfdcan,FDCAN_RX_FIFO0,&RxHeader,RxData);
+		
+		HAL_FDCAN_ActivateNotification(hfdcan,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -176,9 +184,6 @@ int main(void)
   HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
   DRV8320S_Init();
   MotorControlInit();
-  HAL_ADC_Start(&hadc2);
-  HAL_Delay(2000);
-  uint16_t testval=HAL_ADC_GetValue(&hadc2);
   //get starting point hall state to not create 3 phase short circuit
   MotorGetActualHallState();
   MotorCalculateNewHallState();
@@ -186,7 +191,8 @@ int main(void)
   PI_regulators_Init(&MotorControlParameters.RPM_measured,&MotorControlParameters.Current_Measured);
   HAL_TIM_Base_Start_IT(&htim6);
   MotorUpdateTimePulse(300);
-
+  HAL_FDCAN_Start(&hfdcan1);
+  HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
   /* USER CODE END 2 */
 
   /* Init scheduler */

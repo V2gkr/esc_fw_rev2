@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include "UartComm.h"
 #include "MotorControl.h"
+#include "diagnostics.h"
 
 typedef union{
 	float fword;

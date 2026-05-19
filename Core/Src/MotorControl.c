@@ -74,16 +74,10 @@ typedef enum{
 
 
 void MotorControlInit(void){
-  MotorControlParameters.RPM_reference=MotorCalculateNewRPM(SIX_STEP_FREQ);
+  MotorControlParameters.RPM_reference=30;//MotorCalculateNewRPM(SIX_STEP_FREQ);
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_DIFFERENTIAL_ENDED);
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_DIFFERENTIAL_ENDED);
   HAL_TIMEx_HallSensor_Start_IT(&htim4);
-  // OPAMP1->CSR&=~OPAMP_CSR_PGGAIN;
-  // OPAMP1->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
-  // OPAMP2->CSR&=~OPAMP_CSR_PGGAIN;
-  // OPAMP2->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
-  // OPAMP3->CSR&=~OPAMP_CSR_PGGAIN;
-  // OPAMP3->CSR|=OPAMP_CSR_PGGAIN_3|OPAMP_CSR_PGGAIN_1;
   HAL_OPAMP_SelfCalibrate(&hopamp1);
   HAL_OPAMP_SelfCalibrate(&hopamp2);
   HAL_OPAMP_SelfCalibrate(&hopamp3);
@@ -93,8 +87,6 @@ void MotorControlInit(void){
   //3 phase measurement start and shit
   HAL_ADCEx_InjectedStart(&hadc1);
   HAL_ADCEx_InjectedStart(&hadc2);
-  // HAL_ADC_Start_DMA(&hadc2,(uint32_t*)&CurrentShuntRawData[1],2);
-  // HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&CurrentShuntRawData,1);
 }
 
 void MotorUpdateTimePulse(uint16_t pulse){
@@ -226,42 +218,29 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
     case 2:
       /* step 1 - phase 3 pwm , phase 2 force inactive , phase 1 off
        *  phase 3 Vm , phase 2 gnd - read current phase 2*/
-    //  adc_current_readings=CurrentShuntRawData[1];
-    //  break;
-    //case 2:
       /* step 2 - phase 3 off , phase 2 force inactive , phase 1 pwm
        * phase 1 vm phase 2 gnd - read current phase 2*/
       
       adc_current_readings=opamp2_data-1220;
-      //adc_current_readings=CurrentShuntRawData[1]-ADC_ZERO_CURRENT_VALUE_2;
       break;
     case 3:
     case 4:
       /* step 3 - phase 3 force inactive , phase 2 off , phase 1 pwm
        * phase 1 vm phase 3 gnd - read current phase 3*/
-      //adc_current_readings=CurrentShuntRawData[2];
-      //break;
-    //case 4:
       /* step 4 - phase 3 force inactive , phase 2 pwm , phase 1 off
-       * phase 2 vm , phase 3 gnd - read current phase 3*/
-      // adc_current_readings=CurrentShuntRawData[2]-ADC_ZERO_CURRENT_VALUE_3;
-      
+       * phase 2 vm , phase 3 gnd - read current phase 3*/      
       adc_current_readings=opamp3_data-1220;
       break;
     case 5:
     case 6:
       /* step 5 - phase 3 off , phase 2 pwm , phase 1 force inactive
        * phase 2 vm phase 1 gnd , - read current phase 1 */
-//      adc_current_readings=CurrentShuntRawData[0];
-//      break;
-//    case 6:
       /* step 6 - phase 3 pwm , phase 2 off , phase 1 force inactive
-       * phase 3 vm phase 1 gnd - read current phase 1*/
-      //adc_current_readings=CurrentShuntRawData[0]-ADC_ZERO_CURRENT_VALUE_1;
-      
+       * phase 3 vm phase 1 gnd - read current phase 1*/      
       adc_current_readings=opamp1_data-1200;
       break;
     default:
+    //if no step is active here we should signal an error
       adc_current_readings=0;
       break;
 	}
@@ -280,41 +259,24 @@ void MotorCalculateNewHallState(void){
     case HALL_STATE_1_101:
     // (direction) ? ccw : cw
       MotorControlParameters.Step = (direction) ? 4 : 5;
-//      MotorControlParameters.Step=4;//ccw
-//      MotorControlParameters.Step=5;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=2; //that worked with blue/green/yellow
       break;
     case HALL_STATE_2_100:
       MotorControlParameters.Step = (direction) ? 3 : 4;
-//      MotorControlParameters.Step=3;//ccw
-//      MotorControlParameters.Step=4;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=3;//that worked with blue/green/yellow
       break;
     case HALL_STATE_3_110:
       MotorControlParameters.Step = (direction) ? 2 : 3;
-//      MotorControlParameters.Step=2;//ccw
-//      MotorControlParameters.Step=3;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=4;//that worked with blue/green/yellow
       break;
     case HALL_STATE_4_010:
       MotorControlParameters.Step = (direction) ? 1 : 2;
-//      MotorControlParameters.Step=1;//ccw
-//      MotorControlParameters.Step=2;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=5;//that worked with blue/green/yellow
       break;
     case HALL_STATE_5_011:
       MotorControlParameters.Step = (direction) ? 6 : 1;
-//      MotorControlParameters.Step=6;//ccw
-//      MotorControlParameters.Step=1;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=6;//that worked with blue/green/yellow
       break;
     case HALL_STATE_6_001:
       MotorControlParameters.Step = (direction) ? 5 : 6;
-//      MotorControlParameters.Step=5;//ccw
-//      MotorControlParameters.Step=6;// that worked with blue green yellow clockwise
-//      MotorControlParameters.Step=1;//that worked with blue/green/yellow
       break;
     default:
+    // if no suitable hall state is active - we should consider an error 
       break;
   }
   if(MotorControlParameters.PrevHallState!=MotorControlParameters.HallState){

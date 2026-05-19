@@ -150,7 +150,7 @@ void StartMotorCtrlTask(void *argument)
 }
 
 /* USER CODE BEGIN Header_StartCommTask */
-uint16_t adc_Data;
+extern FDCAN_HandleTypeDef hfdcan1;
 /**
 * @brief Function implementing the CommTask thread.
 * @param argument: Not used
@@ -162,6 +162,18 @@ void StartCommTask(void *argument)
   /* USER CODE BEGIN StartCommTask */
   (void)argument;
   uint8_t green_led_counter;
+
+  FDCAN_TxHeaderTypeDef TxHeader;
+  uint8_t TxData[8];
+  TxHeader.Identifier=0x11;
+	TxHeader.IdType=FDCAN_STANDARD_ID;
+	TxHeader.TxFrameType=FDCAN_DATA_FRAME;
+	TxHeader.DataLength=FDCAN_DLC_BYTES_8;
+	TxHeader.ErrorStateIndicator=FDCAN_ESI_ACTIVE;
+	TxHeader.BitRateSwitch=FDCAN_BRS_OFF;
+	TxHeader.FDFormat=FDCAN_CLASSIC_CAN;
+	TxHeader.TxEventFifoControl=FDCAN_NO_TX_EVENTS;
+	TxHeader.MessageMarker=0;
   /* Infinite loop */
   for(;;)
   {
@@ -172,9 +184,8 @@ void StartCommTask(void *argument)
       green_led_counter++;
       if(green_led_counter==20) {
         green_led_counter=0;
-        //adc_Data=HAL_ADC_GetValue(&hadc2);
         HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-        //HAL_ADC_Start(&hadc2);
+        HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1,&TxHeader,TxData);
 
       }
         
