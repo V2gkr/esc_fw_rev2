@@ -33,6 +33,11 @@
 #define VBUS_R2 15
 #define REF     3.3
 #define ADC_RESOLUTION  4095
+
+//empyrical values based on 10 and 20 measurements
+#define VBUS_CORRECTION_A   1.00151
+#define VBUS_CORRECTION_B   0.9363345
+
 int16_t temp_table[]={
 -40,-35,-30,-25,
 -20,-15,-10,-5,0,5,10,
@@ -110,6 +115,7 @@ void VbusService(void){
   HAL_ADC_Start(&hadc2);
   float voltage_pre_div=(float)((VBUS_measurement_samples*ADC_VOLTAGE_REFERENCE)/ADC_MAX_VALUE);
   esc_data.vbus_volt=(float)(voltage_pre_div/(float)((float)VBUS_R2/(float)(VBUS_R1+VBUS_R2)));
+  esc_data.vbus_volt=esc_data.vbus_volt*VBUS_CORRECTION_A+VBUS_CORRECTION_B;
   if(esc_data.vbus_volt>VBUS_OV_LEVEL)
     esc_data.alarms|=ALARM_VBUS_OV;
   else
