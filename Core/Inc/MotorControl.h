@@ -59,4 +59,8 @@ void MotorTurnOffSlow(void);
 void MotorFSMService(void);
 
 void MotorEstimateDcCurrentFromPhaseShunt(void);
+
+void MotorControlStartCurrentSenseCalibration(void);
+
+void MotorControlCurrentSenseCalibrationCallback(void);
 #endif

@@ -4,6 +4,8 @@
 #include "MotorControl.h"
 #include "MotorConfig.h"
 #include "stm32g4xx_hal_adc_ex.h"
+#include "stm32g4xx_hal_tim.h"
+#include <stdint.h>
 volatile uint8_t bldc_count=0;
 
 float speed_log[1024];
@@ -57,9 +59,12 @@ MotorControlParameterStruct MotorControlParameters={0};
 
 #define LOW_SPEED_MEASUREMENT_LIMIT 13333
 
+#define CURRENT_SENSE_CALIBRATION_COUNTER 1000
 uint8_t soft_start_counter=0;
 volatile uint8_t soft_start_update_event=0;
 
+volatile uint8_t CurrentCalibrationState=1;
+uint16_t CurrentCalibrationCounter=0;
 uint16_t CurrentShuntRawData[3];
 
 typedef enum{
@@ -71,7 +76,33 @@ typedef enum{
   HALL_STATE_6_001=0b001
 }HallStates;
 
+uint32_t currentsensecalibration[3]={0};
 
+void MotorControlStartCurrentSenseCalibration(void){
+  HAL_TIM_Base_Start_IT(&htim1);
+  TIM1->CR2 |= (uint16_t) TIM_CR2_CCPC;
+  __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC4);
+  //stops main until calibration is complete
+  while(CurrentCalibrationState);
+}
+
+void MotorControlCurrentSenseCalibrationCallback(void){
+  if(CurrentCalibrationState==0)
+    return;
+  if(CurrentCalibrationCounter<CURRENT_SENSE_CALIBRATION_COUNTER && CurrentCalibrationState){
+    CurrentCalibrationCounter++;
+    currentsensecalibration[0]+=HAL_ADCEx_InjectedGetValue(&hadc1, ADC_INJECTED_RANK_1);
+    currentsensecalibration[1]+=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
+    currentsensecalibration[2]+=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_2);
+  }
+  else{
+    currentsensecalibration[0]/=CURRENT_SENSE_CALIBRATION_COUNTER;
+    currentsensecalibration[1]/=CURRENT_SENSE_CALIBRATION_COUNTER;
+    currentsensecalibration[2]/=CURRENT_SENSE_CALIBRATION_COUNTER;
+    CurrentCalibrationState=0;
+    HAL_TIM_Base_Stop_IT(&htim1);
+  }
+}
 
 void MotorControlInit(void){
   MotorControlParameters.RPM_reference=30;//MotorCalculateNewRPM(SIX_STEP_FREQ);
@@ -221,7 +252,7 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
       /* step 2 - phase 3 off , phase 2 force inactive , phase 1 pwm
        * phase 1 vm phase 2 gnd - read current phase 2*/
       
-      adc_current_readings=opamp2_data-1220;
+      adc_current_readings=opamp2_data-currentsensecalibration[1];//1220
       break;
     case 3:
     case 4:
@@ -229,7 +260,7 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
        * phase 1 vm phase 3 gnd - read current phase 3*/
       /* step 4 - phase 3 force inactive , phase 2 pwm , phase 1 off
        * phase 2 vm , phase 3 gnd - read current phase 3*/      
-      adc_current_readings=opamp3_data-1220;
+      adc_current_readings=opamp3_data-currentsensecalibration[2];//1220
       break;
     case 5:
     case 6:
@@ -237,7 +268,7 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
        * phase 2 vm phase 1 gnd , - read current phase 1 */
       /* step 6 - phase 3 pwm , phase 2 off , phase 1 force inactive
        * phase 3 vm phase 1 gnd - read current phase 1*/      
-      adc_current_readings=opamp1_data-1200;
+      adc_current_readings=opamp1_data-currentsensecalibration[0];//1200
       break;
     default:
     //if no step is active here we should signal an error

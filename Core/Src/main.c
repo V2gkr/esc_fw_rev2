@@ -24,6 +24,7 @@
 #include "fdcan.h"
 #include "opamp.h"
 #include "spi.h"
+#include "stm32g4xx_hal_tim.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -104,6 +105,7 @@ uint16_t output;
 float foutput;
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
   if(htim->Instance == TIM1) {
+    MotorControlCurrentSenseCalibrationCallback();
     foutput=PI_regulator(&CurrentReg,SpeedReg.output);
     foutput=fabs(foutput);
     if(foutput>1)
@@ -132,6 +134,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		HAL_FDCAN_ActivateNotification(hfdcan,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
 	}
 }
+extern volatile uint8_t CurrentCalibrationState;
 /* USER CODE END 0 */
 
 /**
@@ -178,12 +181,17 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   UartCommInit();
-  DRV8320_SetEnable();
+  
+  
+  MotorControlInit();
+  MotorControlStartCurrentSenseCalibration();
+  //enable only after current calibration
+  //DRV8320_SetEnable();
   /* for initialization only */
   HAL_Delay(10);
   HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
   DRV8320S_Init();
-  MotorControlInit();
+  
   //get starting point hall state to not create 3 phase short circuit
   MotorGetActualHallState();
   MotorCalculateNewHallState();
