@@ -188,7 +188,6 @@ int main(void)
   
   
   MotorControlInit();
-  MotorControlStartCurrentSenseCalibration();
   //enable only after current calibration
   DRV8320_SetEnable();
   /* for initialization only */
@@ -200,8 +199,7 @@ int main(void)
   MotorCalculateNewHallState();
   MotorLoadNewStep();
   PI_regulators_Init(&MotorControlParameters.RPM_measured,&MotorControlParameters.Current_Measured);
-  HAL_TIM_Base_Start_IT(&htim6);
-  //MotorUpdateTimePulse(300);
+  
   HAL_FDCAN_Start(&hfdcan1);
   HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
   /* USER CODE END 2 */

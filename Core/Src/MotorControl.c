@@ -108,6 +108,8 @@ void MotorControlCurrentSenseCalibrationCallback(void){
 }
 
 void MotorControlInit(void){
+  //immediate timer start for hall sensors
+  HAL_TIM_Base_Start_IT(&htim6);
   MotorControlParameters.RPM_reference=30;//MotorCalculateNewRPM(SIX_STEP_FREQ);
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_DIFFERENTIAL_ENDED);
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_DIFFERENTIAL_ENDED);
