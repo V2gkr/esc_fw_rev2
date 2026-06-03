@@ -105,27 +105,31 @@ uint16_t output;
 float foutput;
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim) {
   if(htim->Instance == TIM1) {
-    MotorControlCurrentSenseCalibrationCallback();
-    foutput=PI_regulator(&CurrentReg,SpeedReg.output);
-    foutput=fabs(foutput);
-    if(foutput>1)
-      foutput=1;
-    output=(foutput)*9999;//abs
-//    if(output>9999)
-//      output=9999;
-    //MotorUpdateTimePulse(output);
-    CallbackUpdateTimerPulse();
-	  MotorEstimateDcCurrentFromPhaseShunt();
-    MotorGetActualHallState();
-    MotorCalculateNewHallState();
-    //MotorGetNextStep();
-    MotorLoadNewStep();
-
+    switch(MotorControlParameters.actualMotorState){
+      case MOTOR_CALIBRATION:
+        MotorControlCurrentSenseCalibrationCallback();
+        break;
+      case MOTOR_ACTIVE:
+        foutput=PI_regulator(&CurrentReg,SpeedReg.output);
+        foutput=fabs(foutput);
+        if(foutput>1)
+          foutput=1;
+        output=(foutput)*9999;//abs
+        if(output>9999)
+          output=9999;
+        //MotorUpdateTimePulse(output);
+        CallbackUpdateTimerPulse();
+        MotorEstimateDcCurrentFromPhaseShunt();
+        MotorGetActualHallState();
+        MotorCalculateNewHallState();
+        //MotorGetNextStep();
+        MotorLoadNewStep();
+        break;
+    }
   }
 }
-uint32_t Ticks=0;
 FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t RxData[2];
+uint8_t RxData[8];
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs){
 	if((RxFifo0ITs&FDCAN_IT_RX_FIFO0_NEW_MESSAGE)!=RESET){
 		
@@ -186,10 +190,9 @@ int main(void)
   MotorControlInit();
   MotorControlStartCurrentSenseCalibration();
   //enable only after current calibration
-  //DRV8320_SetEnable();
+  DRV8320_SetEnable();
   /* for initialization only */
   HAL_Delay(10);
-  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
   DRV8320S_Init();
   
   //get starting point hall state to not create 3 phase short circuit
@@ -198,7 +201,7 @@ int main(void)
   MotorLoadNewStep();
   PI_regulators_Init(&MotorControlParameters.RPM_measured,&MotorControlParameters.Current_Measured);
   HAL_TIM_Base_Start_IT(&htim6);
-  MotorUpdateTimePulse(300);
+  //MotorUpdateTimePulse(300);
   HAL_FDCAN_Start(&hfdcan1);
   HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
   /* USER CODE END 2 */

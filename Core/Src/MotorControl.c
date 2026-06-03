@@ -79,17 +79,17 @@ typedef enum{
 uint32_t currentsensecalibration[3]={0};
 
 void MotorControlStartCurrentSenseCalibration(void){
-  HAL_TIM_Base_Start_IT(&htim1);
+  //HAL_TIM_Base_Start_IT(&htim1);
   TIM1->CR2 |= (uint16_t) TIM_CR2_CCPC;
-  __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC4);
+  HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);
+  //__HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC4);
   //stops main until calibration is complete
-  while(CurrentCalibrationState);
 }
 
 void MotorControlCurrentSenseCalibrationCallback(void){
-  if(CurrentCalibrationState==0)
+  if(MotorControlParameters.actualMotorState==MOTOR_NOT_ACTIVE)
     return;
-  if(CurrentCalibrationCounter<CURRENT_SENSE_CALIBRATION_COUNTER && CurrentCalibrationState){
+  if(CurrentCalibrationCounter<CURRENT_SENSE_CALIBRATION_COUNTER && MotorControlParameters.actualMotorState==MOTOR_CALIBRATION){
     CurrentCalibrationCounter++;
     currentsensecalibration[0]+=HAL_ADCEx_InjectedGetValue(&hadc1, ADC_INJECTED_RANK_1);
     currentsensecalibration[1]+=HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1);
@@ -99,8 +99,11 @@ void MotorControlCurrentSenseCalibrationCallback(void){
     currentsensecalibration[0]/=CURRENT_SENSE_CALIBRATION_COUNTER;
     currentsensecalibration[1]/=CURRENT_SENSE_CALIBRATION_COUNTER;
     currentsensecalibration[2]/=CURRENT_SENSE_CALIBRATION_COUNTER;
-    CurrentCalibrationState=0;
-    HAL_TIM_Base_Stop_IT(&htim1);
+    MotorControlParameters.actualMotorState=MOTOR_NOT_ACTIVE;
+    HAL_TIM_OC_Stop_IT(&htim1, TIM_CHANNEL_4);
+    // HAL_TIM_Base_Stop_IT(&htim1);
+    // __HAL_TIM_DISABLE(&htim1);
+    // __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_CC4);
   }
 }
 
@@ -275,13 +278,8 @@ void MotorEstimateDcCurrentFromPhaseShunt(void){
       adc_current_readings=0;
       break;
 	}
-	//MotorControlParameters.Current_Measured=((int16_t)(CurrentShuntRawData[0]-ADC_ZERO_CURRENT_VALUE))*ADC_VOLTAGE_REFERENCE*CURRENT_SENSE_CIRCUIT_EQ_RESISTANCE/ADC_MAX_VALUE;
 	MotorControlParameters.Current_Measured=((adc_current_readings*ADC_VOLTAGE_REFERENCE/ADC_MAX_VALUE)/PGA_GAIN)*CURRENT_SENSE_CIRCUIT_EQ_RESISTANCE;
 	//calculate current itd
-  if(speed_counter<1024 && MotorControlParameters.actualMotorState==MOTOR_ACTIVE){
-    speed_log[speed_counter]=MotorControlParameters.Current_Measured;
-    speed_counter++;
-  }
 }
 
 void MotorCalculateNewHallState(void){
@@ -334,6 +332,10 @@ void MotorGetNextStep(void){
 
 void MotorFSMService(void){
 	switch(MotorControlParameters.actualMotorState){
+  case MOTOR_INIT_STATE:
+    MotorControlParameters.actualMotorState=MOTOR_CALIBRATION;
+    MotorControlStartCurrentSenseCalibration();
+    break;
 	case MOTOR_SOFT_BRAKING:
 		soft_start_counter--;
 		soft_start_update_event=1;
@@ -352,7 +354,15 @@ void MotorFSMService(void){
 		if(MotorControlParameters.PrevDirection!=MotorControlParameters.Direction){
 			MotorTurnOffSlow();
 		}
+    break;
+  case MOTOR_CALIBRATION:
+  //probably do nothing , just wait to completion
+    break;
+  default:
+    break;
 	}
+  
+
 
 
 }
